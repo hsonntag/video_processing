@@ -1,0 +1,13 @@
+
+UNIX
+Compile either as application with:
+>>gcc read_camera.c -v -std=c99 $(pkg-config --libs --cflags opencv)
+
+or for MATLAB with:
+>>mex read_camera.c -v CFLAGS='$CFLAGS -std=c99' $(pkg-config --libs --cflags opencv)
+
+MS WINDOWS
+Compilation should be similar to unix
+
+USAGE
+In MATLAB use read_camera(-1) to deinitialize the cam.
