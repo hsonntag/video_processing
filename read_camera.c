@@ -19,6 +19,7 @@ typedef CHAR16_T char16_t;
 #endif
 
 static const double pi = 3.14159265358979323846;
+int cam = 0;
 
 inline static double square(int a)
 {
@@ -53,14 +54,22 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int num = (int) mxGetScalar(prhs[0]);
 
 #else
-int main()
-{
+    int main(int argc, char * args[])
+    {
+        if ( argc > 1 )
+        {
+            cam = atoi(args[1]);
+            printf("read from cam %d\n", cam);
+        }
 #endif
+        CvVideoWriter *writer = 0;
+        int isColor = 1;
+        int fps     = 5;  // or 30
         static CvCapture *capture = NULL;
         if ( !capture )
         {
             /* initialize camera */
-            capture = cvCaptureFromCAM( 0 );
+            capture = cvCaptureFromCAM( cam );
         }
 
         /* always check */
@@ -93,6 +102,7 @@ int main()
 
         static IplImage *frame = NULL, *frame1 = NULL, *frame1_1C = NULL, *frame2_1C = NULL, *eig_image = NULL, *temp_image = NULL, *pyramid1 = NULL, *pyramid2 = NULL;
 
+        writer = cvCreateVideoWriter("out.avi", -1, fps, frame_size,isColor);
 #ifndef MATLAB_MEX_FILE
         // Initialise the GUI
         const char *window = "Optical Flow";
@@ -108,9 +118,9 @@ int main()
                 /* Why did we get a NULL frame?  We shouldn't be at the end. */
                 fprintf(stderr, "Error: Hmm. The end came sooner than we thought.\n");
 #ifdef MATLAB_MEX_FILE
-            return;
+                return;
 #else
-            return -1;
+                return -1;
 #endif
             }
             allocateOnDemand( &frame1_1C, frame_size, IPL_DEPTH_8U, 1 );
@@ -131,9 +141,9 @@ int main()
             {
                 fprintf(stderr, "Error: Hmm. The end came sooner than we thought.\n");
 #ifdef MATLAB_MEX_FILE
-            return;
+                return;
 #else
-            return -1;
+                return -1;
 #endif
             }
 
@@ -261,13 +271,17 @@ int main()
             {
                 cvReleaseCapture( &capture );
                 capture = 0;
+                cvReleaseVideoWriter( &writer );
+                writer = 0;
             }
 #else
             cvShowImage(window, frame1);
+            cvWriteFrame(writer, frame1);
         }
         // Clean up
         cvDestroyAllWindows();
         cvReleaseCapture( &capture );
+        cvReleaseVideoWriter( &writer );
 #endif
-}
+    }
 
